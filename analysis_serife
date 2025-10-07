@@ -1,0 +1,46 @@
+#Got all files in one folder
+#they are split in L001 and L002, so first cat this for both R1 and R2 as follows:
+ls -1 *R1*.fastq | awk -F '_' '{print $1"_"$2}' | sort | uniq > ID
+
+for i in `cat ./ID`; 
+
+do cat $i\_L001\_R1_001.fastq $i\_L002\_R1_001.fastq > $i\_R1_cat.fastq; 
+
+done;
+
+##while doing this I realised that Serife-MMKD5_S65_L002_R2_001.fastq does not exist
+##when I checked the primary data I see that there might have been some issue with download as only file part exists in that folder
+#so for this sample I might have to drop L002_R1 also, such that both pairs will be discarded from the analysis.
+
+##now first I had to download rat database, in order to use it for host contmaination removal
+
+##this is how I did it
+
+cd /data/Food/analysis/R0986_toombak/serife/genomes/rat
+
+# Download
+#wget ftp://ftp.ensembl.org/pub/release-111/fasta/rattus_norvegicus/dna/Rattus_norvegicus.mRatBN7.2.dna.toplevel.fa.gz
+
+# Unzip
+#gunzip Rattus_norvegicus.mRatBN7.2.dna.toplevel.fa.gz
+
+module load bowtie2/2.5.3
+
+bowtie2-build Rattus_norvegicus.mRatBN7.2.dna.toplevel.fa rat_mRatBN7.2
+
+###I then used kneaddata with this db 
+
+##now there was a huge read loss in some samples - but when you look at the kneaddata breakdown the loss was not at the trimming and filtering step
+##instead the loss was at host contamination removal step!
+
+#so may be it is okay to use kneaddata output after all!
+
+######now I tried uisng metaphlan4 but I did not get good classification so I decided to use kraken2 and bracken2
+#I used kraken2 PlusPF db for taxonomic classification
+#And then used bracken to get abundance results.
+
+##I directly used the cat output from kneaddata as input for kraken2.
+##here I didnt need to split the files and thus changing file headers was not needed
+
+##so ran kraken2 on cat out directly
+
